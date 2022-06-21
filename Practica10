@@ -1,0 +1,44 @@
+import cv2
+import numpy as np
+img = cv2.imread("conto.png")
+
+
+# Para seleccionar el Template
+ROI = cv2.selectROI(img)
+print("Recorte es de: ", ROI)
+# Pizarra_cropped
+recorte = img[int(ROI[1]):int(ROI[1]+ROI[3]),int(ROI[0]):int(ROI[0]+ROI[2])]
+# cv2.imshow('Imagen Recortada', recorte)
+# cv2.waitKey(0)
+
+img_recorte_gris = cv2.cvtColor(recorte, cv2.COLOR_BGR2GRAY)
+img_recorte_gray = np.float32(img_recorte_gris)
+
+# Corner Harris
+dst = cv2.cornerHarris(img_recorte_gray, 2, 3, 0.04)
+
+height, width = dst.shape
+color = (0, 200, 0)
+
+for y in range(0, height):
+    for x in range(0, width):
+        if dst.item(y, x) > 0.01 * dst.max():
+            cv2.circle(recorte, (x, y), 2, color, cv2.FILLED, cv2.LINE_AA)
+
+# Corner Harris
+#cv2.imshow('Esquinas con Harris', dst)
+cv2.imshow('Esquinas con Harris sobre el ROI', recorte)
+cv2.waitKey(0)
+
+# Good Features to track
+esquinas = cv2.goodFeaturesToTrack(img_recorte_gris, 40, 0.01, 10)
+esquinas = np.int0(esquinas)
+
+for i in esquinas:
+    x, y = i.ravel()
+    cv2.circle(recorte, (x, y), 3, 255, -1)
+
+# Good Features to track
+cv2.imshow('Esquinas con GoodFeaturesToTrack sobre ROI', recorte)
+cv2.waitKey(0) 
+cv2.destroyAllWindows()
